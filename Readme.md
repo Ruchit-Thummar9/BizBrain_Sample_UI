@@ -9,31 +9,32 @@ This project runs a FastAPI with a simple UI.
 
 project/
 │
-├── setup.py              # Setup file (creates venv + installs dependencies)
-├── requirements.txt   # Python dependencies
-├── start.bat          # Windows launcher
-├── start.sh           # Linux launcher
-├── start.command      # macOS launcher
+├── setup.py                # Creates virtual environment + installs dependencies
+├── requirements.txt       # Python dependencies
 │
-├── .venv/             # Virtual environment (auto created)
+├── start.bat              # Windows launcher
+├── start.sh               # Linux launcher
+├── start.command          # macOS launcher
+│
+├── .venv/                 # Virtual environment (auto-created)
 │
 ├── server/
 │   ├── __init__.py
-│   └── main.py        # FastAPI app
+│   └── main.py            # FastAPI application entry point
+│
+├── routers/
+│   ├── __init__.py
+│   ├── compiler_router.py
+│   ├── dag_router.py
+│   ├── documents_router.py
+│   ├── spreadsheet_router.py
+│   └── sot_router.py
 │
 ├── static/
 │   ├── index.html
 │   ├── compiler.html
 │   ├── dag_viewer.html
-│   ├── sot_dashboard.html
-│   │
-├── routers/
-│   │   ├── __init__.py
-│   │   ├── compiler_router.py
-│   │   ├── dag_router.py
-│   │   ├── documents_router.py
-│   │   ├── spreadsheet_router.py
-│   │   └── sot_router.py
+│   └── sot_dashboard.html
 ---
 
 ## Setup (First Time Only)
