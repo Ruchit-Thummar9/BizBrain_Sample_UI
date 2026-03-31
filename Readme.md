@@ -120,9 +120,6 @@ python setup.py
 2. Start server → `double click start_W.py file`
 3. Open browser → `http://127.0.0.1:8000`
 
----
 
 Done.
-
-```
 
