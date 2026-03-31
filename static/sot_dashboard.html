@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOT Dashboard — BizBrain</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #080c10;
+    --surface: #0e1419;
+    --surface2: #141b22;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(0,212,255,0.3);
+    --accent: #00d4ff;
+    --text: #e8edf2;
+    --text-muted: #556070;
+    --text-dim: #8899aa;
+    --success: #00ff9d;
+    --error: #ff5566;
+    --font-head: 'Syne', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.02) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+  }
+
+  nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 48px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(8,12,16,0.9);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    backdrop-filter: blur(12px);
+  }
+
+  .nav-back {
+    display: flex; align-items: center; gap: 6px;
+    color: var(--text-muted); text-decoration: none;
+    font-size: 12px; letter-spacing: 0.5px;
+    transition: color 0.2s;
+  }
+  .nav-back:hover { color: var(--accent); }
+  .nav-back svg { width: 14px; height: 14px; }
+
+  .nav-sep { color: var(--text-muted); font-size: 14px; }
+
+  .nav-title {
+    font-family: var(--font-head);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .nav-badge {
+    margin-left: auto;
+    font-size: 10px;
+    color: var(--accent);
+    border: 1px solid rgba(0,212,255,0.25);
+    padding: 2px 10px;
+    border-radius: 4px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  /* Layout */
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    min-height: calc(100vh - 65px);
+  }
+
+  /* Left panel - upload */
+  .panel-upload {
+    padding: 48px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .panel-head {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .panel-label {
+    font-size: 10px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .panel-title {
+    font-family: var(--font-head);
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+  }
+
+  .panel-sub {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-weight: 300;
+    line-height: 1.6;
+  }
+
+  /* Drop zone */
+  .dropzone {
+    border: 1.5px dashed rgba(0,212,255,0.25);
+    border-radius: 16px;
+    padding: 48px 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+    background: rgba(0,212,255,0.02);
+  }
+
+  .dropzone:hover, .dropzone.drag-over {
+    border-color: rgba(0,212,255,0.6);
+    background: rgba(0,212,255,0.04);
+  }
+
+  .dropzone input[type=file] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .dropzone-icon {
+    width: 52px; height: 52px;
+    border-radius: 12px;
+    background: rgba(0,212,255,0.08);
+    border: 1px solid rgba(0,212,255,0.15);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 20px;
+    transition: background 0.2s;
+  }
+
+  .dropzone:hover .dropzone-icon { background: rgba(0,212,255,0.14); }
+
+  .dropzone-title {
+    font-family: var(--font-head);
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+
+  .dropzone-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  .dropzone-sub strong {
+    color: var(--accent);
+    font-weight: 400;
+  }
+
+  /* File selected state */
+  .file-selected {
+    display: none;
+    align-items: center;
+    gap: 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+  }
+
+  .file-selected.visible { display: flex; }
+
+  .file-icon {
+    width: 40px; height: 40px;
+    border-radius: 8px;
+    background: rgba(0,212,255,0.08);
+    border: 1px solid rgba(0,212,255,0.15);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .file-info { flex: 1; min-width: 0; }
+
+  .file-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .file-size {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 3px;
+  }
+
+  .file-remove {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: color 0.2s;
+    display: flex;
+  }
+  .file-remove:hover { color: var(--error); }
+
+  /* Upload btn */
+  .btn-upload {
+    width: 100%;
+    padding: 16px;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    font-family: var(--font-head);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-upload:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+  .btn-upload:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+  /* Spinner */
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(0,0,0,0.2);
+    border-top-color: #000;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+
+  .btn-upload.loading .spinner { display: block; }
+  .btn-upload.loading .btn-text { opacity: 0.6; }
+
+  /* History list */
+  .history-section { flex: 1; }
+
+  .section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .history-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .history-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .history-item:hover { border-color: var(--border-hover); }
+
+  .history-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--success);
+    flex-shrink: 0;
+  }
+
+  .history-name { flex: 1; color: var(--text-dim); }
+  .history-type {
+    font-size: 10px;
+    color: var(--accent);
+    border: 1px solid rgba(0,212,255,0.2);
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+  }
+
+  .history-empty {
+    font-size: 12px;
+    color: var(--text-muted);
+    padding: 20px;
+    text-align: center;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+  }
+
+  /* Right panel - result */
+  .panel-result {
+    padding: 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  /* Idle state */
+  .result-idle {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    text-align: center;
+    opacity: 0.4;
+  }
+
+  .result-idle svg { color: var(--accent); opacity: 0.5; }
+
+  .result-idle-title {
+    font-family: var(--font-head);
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .result-idle-sub { font-size: 12px; color: var(--text-muted); }
+
+  /* Result card */
+  .result-card { display: none; flex-direction: column; gap: 0; }
+  .result-card.visible { display: flex; }
+
+  .result-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .result-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--success);
+  }
+
+  .result-status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 8px var(--success);
+  }
+
+  .result-filename {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: right;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Fields */
+  .fields-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .field-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    transition: border-color 0.2s;
+  }
+
+  .field-card:hover { border-color: var(--border-hover); }
+  .field-card.full { grid-column: 1 / -1; }
+
+  .field-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .field-value {
+    font-family: var(--font-head);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.3px;
+  }
+
+  .field-value.accent { color: var(--accent); }
+  .field-value.success { color: var(--success); }
+
+  .field-value.small { font-size: 14px; font-weight: 500; }
+
+  /* Raw JSON toggle */
+  .raw-toggle {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 8px 14px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: border-color 0.2s, color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .raw-toggle:hover { border-color: var(--border-hover); color: var(--accent); }
+
+  .raw-json {
+    display: none;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    font-size: 11px;
+    line-height: 1.8;
+    color: var(--text-dim);
+    overflow-x: auto;
+    margin-top: 12px;
+    white-space: pre;
+  }
+  .raw-json.visible { display: block; }
+
+  /* Error state */
+  .error-card {
+    display: none;
+    background: rgba(255,85,102,0.06);
+    border: 1px solid rgba(255,85,102,0.2);
+    border-radius: 12px;
+    padding: 20px 24px;
+    color: var(--error);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .error-card.visible { display: block; }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .panel-upload { border-right: none; border-bottom: 1px solid var(--border); }
+    nav { padding: 16px 24px; }
+    .panel-upload, .panel-result { padding: 32px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-back">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,18 9,12 15,6"/></svg>
+    Home
+  </a>
+  <span class="nav-sep">/</span>
+  <span class="nav-title">SOT Dashboard</span>
+  <span class="nav-badge">Document Engine</span>
+</nav>
+
+<div class="layout">
+
+  <!-- LEFT: Upload panel -->
+  <div class="panel-upload">
+    <div class="panel-head">
+      <div class="panel-label">Step 1</div>
+      <div class="panel-title">Upload Document</div>
+      <div class="panel-sub">Drop any PDF invoice or business document. The SOT engine will extract all structured fields automatically.</div>
+    </div>
+
+    <!-- Drop zone -->
+    <div class="dropzone" id="dropzone">
+      <input type="file" id="file-input" accept=".pdf" />
+      <div class="dropzone-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00d4ff" stroke-width="1.5">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+          <polyline points="17,8 12,3 7,8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+      </div>
+      <div class="dropzone-title">Drop PDF here</div>
+      <div class="dropzone-sub">or <strong>click to browse</strong><br>PDF files only · max 10MB</div>
+    </div>
+
+    <!-- File selected -->
+    <div class="file-selected" id="file-selected">
+      <div class="file-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00d4ff" stroke-width="1.5">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+          <polyline points="14,2 14,8 20,8"/>
+        </svg>
+      </div>
+      <div class="file-info">
+        <div class="file-name" id="file-name">document.pdf</div>
+        <div class="file-size" id="file-size">0 KB</div>
+      </div>
+      <button class="file-remove" id="file-remove" title="Remove file">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- Upload button -->
+    <button class="btn-upload" id="btn-upload" disabled>
+      <div class="spinner"></div>
+      <span class="btn-text">Process Document</span>
+    </button>
+
+    <!-- History -->
+    <div class="history-section">
+      <div class="section-head">
+        <div class="section-title">Recent uploads</div>
+      </div>
+      <div class="history-list" id="history-list">
+        <div class="history-empty">No documents uploaded yet</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Result panel -->
+  <div class="panel-result">
+    <div class="panel-head">
+      <div class="panel-label">Step 2</div>
+      <div class="panel-title">Extraction Result</div>
+      <div class="panel-sub">Structured fields extracted by the SOT engine from your document.</div>
+    </div>
+
+    <!-- Idle -->
+    <div class="result-idle" id="result-idle">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 8v4M12 16h.01"/>
+      </svg>
+      <div class="result-idle-title">Awaiting document</div>
+      <div class="result-idle-sub">Upload a PDF to see extracted fields here</div>
+    </div>
+
+    <!-- Result -->
+    <div class="result-card" id="result-card">
+      <div class="result-header">
+        <div class="result-status">
+          <div class="result-status-dot"></div>
+          Extraction complete
+        </div>
+        <div class="result-filename" id="result-filename"></div>
+      </div>
+
+      <div class="fields-grid">
+        <div class="field-card">
+          <div class="field-label">Vendor</div>
+          <div class="field-value" id="f-vendor">—</div>
+        </div>
+        <div class="field-card">
+          <div class="field-label">Document type</div>
+          <div class="field-value accent" id="f-doctype">—</div>
+        </div>
+        <div class="field-card">
+          <div class="field-label">Amount</div>
+          <div class="field-value success" id="f-amount">—</div>
+        </div>
+        <div class="field-card">
+          <div class="field-label">Tax</div>
+          <div class="field-value" id="f-tax">—</div>
+        </div>
+        <div class="field-card">
+          <div class="field-label">Date</div>
+          <div class="field-value small" id="f-date">—</div>
+        </div>
+        <div class="field-card">
+          <div class="field-label">Currency</div>
+          <div class="field-value small" id="f-currency">—</div>
+        </div>
+        <div class="field-card full">
+          <div class="field-label">Document ID</div>
+          <div class="field-value small" id="f-docid">—</div>
+        </div>
+      </div>
+
+      <button class="raw-toggle" id="raw-toggle">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16,18 22,12 16,6"/><polyline points="8,6 2,12 8,18"/></svg>
+        View raw JSON
+      </button>
+      <pre class="raw-json" id="raw-json"></pre>
+    </div>
+
+    <!-- Error -->
+    <div class="error-card" id="error-card"></div>
+  </div>
+
+</div>
+
+<script>
+  const fileInput = document.getElementById('file-input');
+  const dropzone = document.getElementById('dropzone');
+  const fileSelected = document.getElementById('file-selected');
+  const btnUpload = document.getElementById('btn-upload');
+  const historyList = document.getElementById('history-list');
+  let selectedFile = null;
+  let history = [];
+
+  // Drag and drop
+  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag-over'));
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropzone.classList.remove('drag-over');
+    const f = e.dataTransfer.files[0];
+    if (f && f.type === 'application/pdf') setFile(f);
+  });
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) setFile(fileInput.files[0]);
+  });
+
+  function setFile(f) {
+    selectedFile = f;
+    document.getElementById('file-name').textContent = f.name;
+    document.getElementById('file-size').textContent = (f.size / 1024).toFixed(1) + ' KB';
+    fileSelected.classList.add('visible');
+    btnUpload.disabled = false;
+  }
+
+  document.getElementById('file-remove').addEventListener('click', () => {
+    selectedFile = null;
+    fileInput.value = '';
+    fileSelected.classList.remove('visible');
+    btnUpload.disabled = true;
+  });
+
+  // Upload
+  btnUpload.addEventListener('click', async () => {
+    if (!selectedFile) return;
+
+    btnUpload.classList.add('loading');
+    btnUpload.disabled = true;
+    hideResult();
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    try {
+      const res = await fetch('/api/sot/upload-document', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.detail || 'Upload failed');
+
+      showResult(data, selectedFile.name);
+      addHistory(selectedFile.name, data.doc_type || 'Unknown');
+
+    } catch (err) {
+      showError(err.message);
+    } finally {
+      btnUpload.classList.remove('loading');
+      btnUpload.disabled = false;
+    }
+  });
+
+  function hideResult() {
+    document.getElementById('result-idle').style.display = 'none';
+    document.getElementById('result-card').classList.remove('visible');
+    document.getElementById('error-card').classList.remove('visible');
+  }
+
+  function showResult(data, filename) {
+    document.getElementById('result-idle').style.display = 'none';
+    document.getElementById('error-card').classList.remove('visible');
+
+    document.getElementById('result-filename').textContent = filename;
+    document.getElementById('f-vendor').textContent = data.vendor || '—';
+    document.getElementById('f-doctype').textContent = data.doc_type || '—';
+    document.getElementById('f-amount').textContent = data.amount ? formatCurrency(data.amount, data.currency) : '—';
+    document.getElementById('f-tax').textContent = data.tax ? formatCurrency(data.tax, data.currency) : '—';
+    document.getElementById('f-date').textContent = data.date || '—';
+    document.getElementById('f-currency').textContent = data.currency || '—';
+    document.getElementById('f-docid').textContent = data.doc_id || data.id || '—';
+    document.getElementById('raw-json').textContent = JSON.stringify(data, null, 2);
+
+    document.getElementById('result-card').classList.add('visible');
+  }
+
+  function showError(msg) {
+    document.getElementById('result-idle').style.display = 'none';
+    document.getElementById('result-card').classList.remove('visible');
+    const el = document.getElementById('error-card');
+    el.textContent = 'Error: ' + msg;
+    el.classList.add('visible');
+  }
+
+  function formatCurrency(val, currency) {
+    const sym = currency === 'USD' ? '$' : currency === 'EUR' ? '€' : currency === 'INR' ? '₹' : '';
+    return sym + Number(val).toLocaleString();
+  }
+
+  function addHistory(name, type) {
+    history.unshift({ name, type });
+    if (history.length > 5) history.pop();
+    renderHistory();
+  }
+
+  function renderHistory() {
+    if (!history.length) {
+      historyList.innerHTML = '<div class="history-empty">No documents uploaded yet</div>';
+      return;
+    }
+    historyList.innerHTML = history.map(h => `
+      <div class="history-item">
+        <div class="history-dot"></div>
+        <div class="history-name">${h.name}</div>
+        <div class="history-type">${h.type}</div>
+      </div>
+    `).join('');
+  }
+
+  // Raw JSON toggle
+  document.getElementById('raw-toggle').addEventListener('click', function() {
+    const raw = document.getElementById('raw-json');
+    const visible = raw.classList.toggle('visible');
+    this.querySelector('span') && (this.querySelector('span').textContent = visible ? 'Hide JSON' : 'View raw JSON');
+    this.childNodes[2].textContent = visible ? ' Hide JSON' : ' View raw JSON';
+  });
+</script>
+</body>
+</html>

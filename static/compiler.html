@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GPL Compiler — BizBrain</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #080c10;
+    --surface: #0e1419;
+    --surface2: #141b22;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(124,111,255,0.35);
+    --accent: #7c6fff;
+    --accent-dim: rgba(124,111,255,0.15);
+    --text: #e8edf2;
+    --text-muted: #556070;
+    --text-dim: #8899aa;
+    --success: #00ff9d;
+    --error: #ff5566;
+    --font-head: 'Syne', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,111,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,111,255,0.02) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+  }
+
+  nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 48px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(8,12,16,0.9);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    backdrop-filter: blur(12px);
+    flex-shrink: 0;
+  }
+
+  .nav-back { display: flex; align-items: center; gap: 6px; color: var(--text-muted); text-decoration: none; font-size: 12px; letter-spacing: 0.5px; transition: color 0.2s; }
+  .nav-back:hover { color: var(--accent); }
+  .nav-back svg { width: 14px; height: 14px; }
+  .nav-sep { color: var(--text-muted); font-size: 14px; }
+  .nav-title { font-family: var(--font-head); font-size: 15px; font-weight: 700; color: var(--text); }
+  .nav-badge { margin-left: auto; font-size: 10px; color: var(--accent); border: 1px solid rgba(124,111,255,0.25); padding: 2px 10px; border-radius: 4px; letter-spacing: 1.5px; text-transform: uppercase; }
+
+  /* Main layout */
+  .main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    min-height: 0;
+  }
+
+  /* Sidebar - history */
+  .sidebar {
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sidebar-head {
+    padding: 28px 28px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-label {
+    font-size: 10px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .sidebar-title {
+    font-family: var(--font-head);
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .query-history {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .query-history::-webkit-scrollbar { width: 4px; }
+  .query-history::-webkit-scrollbar-track { background: transparent; }
+  .query-history::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .history-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .history-item:hover { border-color: var(--border-hover); }
+  .history-item.active { border-color: rgba(124,111,255,0.4); background: var(--accent-dim); }
+
+  .hi-goal {
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.4;
+    margin-bottom: 8px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .hi-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .hi-time { font-size: 10px; color: var(--text-muted); }
+  .hi-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    border: 1px solid;
+  }
+  .hi-badge.ok { color: var(--success); border-color: rgba(0,255,157,0.2); }
+  .hi-badge.err { color: var(--error); border-color: rgba(255,85,102,0.2); }
+
+  .sidebar-empty {
+    padding: 40px 24px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  /* Suggested queries */
+  .suggestions {
+    padding: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .suggestions-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+  .suggestion-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chip {
+    font-size: 11px;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+    background: none;
+    font-family: var(--font-mono);
+  }
+  .chip:hover { border-color: var(--border-hover); color: var(--accent); }
+
+  /* Right - compiler */
+  .compiler-area {
+    display: flex;
+    flex-direction: column;
+    padding: 40px 48px;
+    gap: 28px;
+    overflow-y: auto;
+  }
+
+  .compiler-head {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .compiler-label {
+    font-size: 10px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .compiler-title {
+    font-family: var(--font-head);
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  .compiler-sub {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-weight: 300;
+    line-height: 1.6;
+  }
+
+  /* Input area */
+  .input-block {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .goal-input-wrap {
+    position: relative;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    transition: border-color 0.2s;
+    overflow: hidden;
+  }
+
+  .goal-input-wrap:focus-within { border-color: rgba(124,111,255,0.4); }
+
+  textarea#goal-input {
+    width: 100%;
+    min-height: 100px;
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    font-family: var(--font-mono);
+    font-size: 15px;
+    color: var(--text);
+    padding: 20px 20px 8px;
+    line-height: 1.6;
+  }
+
+  textarea#goal-input::placeholder { color: var(--text-muted); }
+
+  .input-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  .char-count { font-size: 11px; color: var(--text-muted); }
+
+  .btn-compile {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: var(--font-head);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    letter-spacing: 0.3px;
+  }
+  .btn-compile:hover:not(:disabled) { opacity: 0.85; }
+  .btn-compile:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
+  .btn-compile.loading .spinner { display: block; }
+
+  /* Result output */
+  .output-block { display: none; flex-direction: column; gap: 16px; }
+  .output-block.visible { display: flex; }
+
+  .output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .output-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .output-time { font-size: 10px; color: var(--text-muted); }
+
+  /* Main answer */
+  .answer-card {
+    background: var(--surface);
+    border: 1px solid rgba(124,111,255,0.2);
+    border-radius: 14px;
+    padding: 28px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .answer-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+  }
+
+  .answer-text {
+    font-family: var(--font-head);
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: var(--text);
+    margin-bottom: 8px;
+    line-height: 1.1;
+  }
+
+  .answer-text.text-answer { font-size: 18px; letter-spacing: -0.3px; font-weight: 600; line-height: 1.5; }
+
+  .answer-meta { font-size: 12px; color: var(--text-muted); }
+
+  /* Aterm breakdown */
+  .aterm-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .aterm-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 18px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 12px;
+  }
+
+  .aterm-name {
+    color: var(--accent);
+    font-weight: 500;
+    min-width: 160px;
+    flex-shrink: 0;
+  }
+
+  .aterm-op {
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  .aterm-val { color: var(--text); flex: 1; }
+
+  /* Error */
+  .error-block {
+    display: none;
+    background: rgba(255,85,102,0.06);
+    border: 1px solid rgba(255,85,102,0.2);
+    border-radius: 12px;
+    padding: 20px 24px;
+    color: var(--error);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .error-block.visible { display: block; }
+
+  /* Idle state */
+  .output-idle {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    text-align: center;
+    padding: 60px 0;
+    opacity: 0.35;
+  }
+
+  .output-idle-title { font-family: var(--font-head); font-size: 18px; font-weight: 600; }
+  .output-idle-sub { font-size: 12px; color: var(--text-muted); }
+
+  @media (max-width: 900px) {
+    .main { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    nav { padding: 16px 24px; }
+    .compiler-area { padding: 28px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-back">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,18 9,12 15,6"/></svg>
+    Home
+  </a>
+  <span class="nav-sep">/</span>
+  <span class="nav-title">Compiler UI</span>
+  <span class="nav-badge">GPL Compiler</span>
+</nav>
+
+<div class="main">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-head">
+      <div class="sidebar-label">Session</div>
+      <div class="sidebar-title">Query history</div>
+    </div>
+
+    <div class="query-history" id="query-history">
+      <div class="sidebar-empty">Your compiled goals will appear here</div>
+    </div>
+
+    <div class="suggestions">
+      <div class="suggestions-label">Try these</div>
+      <div class="suggestion-chips">
+        <button class="chip" onclick="setGoal('Total GST this month')">Total GST this month</button>
+        <button class="chip" onclick="setGoal('Total revenue from Apple')">Revenue from Apple</button>
+        <button class="chip" onclick="setGoal('How many invoices this week?')">Invoices this week</button>
+        <button class="chip" onclick="setGoal('Top vendor by amount')">Top vendor</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Compiler area -->
+  <div class="compiler-area">
+    <div class="compiler-head">
+      <div class="compiler-label">GPL Compiler</div>
+      <div class="compiler-title">Ask anything about your data</div>
+      <div class="compiler-sub">Type a natural language goal. The GPL compiler translates it into Aterms and computes the answer from your TinyDB documents.</div>
+    </div>
+
+    <div class="input-block">
+      <div class="goal-input-wrap">
+        <textarea id="goal-input" placeholder="e.g. What is my total GST this month?" rows="4"></textarea>
+        <div class="input-footer">
+          <span class="char-count" id="char-count">0 / 500</span>
+          <button class="btn-compile" id="btn-compile" disabled>
+            <div class="spinner"></div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="compile-icon"><polyline points="16,18 22,12 16,6"/><polyline points="8,6 2,12 8,18"/></svg>
+            Compile
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Idle -->
+    <div class="output-idle" id="output-idle">
+      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#7c6fff" stroke-width="1">
+        <polyline points="16,18 22,12 16,6"/><polyline points="8,6 2,12 8,18"/>
+      </svg>
+      <div class="output-idle-title">Ready to compile</div>
+      <div class="output-idle-sub">Enter a goal above and press Compile</div>
+    </div>
+
+    <!-- Output -->
+    <div class="output-block" id="output-block">
+      <div class="output-header">
+        <div class="output-label">Result</div>
+        <div class="output-time" id="output-time"></div>
+      </div>
+
+      <div class="answer-card">
+        <div class="answer-text" id="answer-text">—</div>
+        <div class="answer-meta" id="answer-meta"></div>
+      </div>
+
+      <div class="aterm-section" id="aterm-section"></div>
+    </div>
+
+    <div class="error-block" id="error-block"></div>
+
+  </div>
+</div>
+
+<script>
+  const goalInput = document.getElementById('goal-input');
+  const btnCompile = document.getElementById('btn-compile');
+  const charCount = document.getElementById('char-count');
+  let sessionHistory = [];
+
+  goalInput.addEventListener('input', () => {
+    const len = goalInput.value.length;
+    charCount.textContent = len + ' / 500';
+    btnCompile.disabled = len === 0;
+  });
+
+  goalInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) compile();
+  });
+
+  btnCompile.addEventListener('click', compile);
+
+  function setGoal(text) {
+    goalInput.value = text;
+    goalInput.dispatchEvent(new Event('input'));
+    goalInput.focus();
+  }
+
+  async function compile() {
+    const goal = goalInput.value.trim();
+    if (!goal) return;
+
+    btnCompile.classList.add('loading');
+    btnCompile.disabled = true;
+    document.getElementById('output-idle').style.display = 'none';
+    document.getElementById('output-block').classList.remove('visible');
+    document.getElementById('error-block').classList.remove('visible');
+
+    const t0 = Date.now();
+
+    try {
+      const res = await fetch('/api/compiler/compile-goal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ goal })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Compilation failed');
+
+      const elapsed = ((Date.now() - t0) / 1000).toFixed(2);
+      showOutput(data, elapsed);
+      addToHistory(goal, data, true);
+
+    } catch (err) {
+      showError(err.message);
+      addToHistory(goal, null, false);
+    } finally {
+      btnCompile.classList.remove('loading');
+      btnCompile.disabled = false;
+    }
+  }
+
+  function showOutput(data, elapsed) {
+    document.getElementById('output-time').textContent = elapsed + 's';
+
+    const answerEl = document.getElementById('answer-text');
+    const answer = data.answer ?? data.result ?? data.value ?? JSON.stringify(data);
+    const isNumeric = !isNaN(parseFloat(answer));
+
+    if (isNumeric) {
+      answerEl.className = 'answer-text';
+      answerEl.textContent = typeof answer === 'number' ? answer.toLocaleString() : answer;
+    } else {
+      answerEl.className = 'answer-text text-answer';
+      answerEl.textContent = answer;
+    }
+
+    document.getElementById('answer-meta').textContent = data.aterm_name ? 'Aterm: ' + data.aterm_name : '';
+
+    // Aterm breakdown if available
+    const section = document.getElementById('aterm-section');
+    section.innerHTML = '';
+    if (data.aterms && Array.isArray(data.aterms)) {
+      data.aterms.forEach(a => {
+        section.innerHTML += `
+          <div class="aterm-row">
+            <div class="aterm-name">${a.name || a.aterm}</div>
+            <div class="aterm-op">=</div>
+            <div class="aterm-val">${a.value !== undefined ? a.value : a.formula || '—'}</div>
+          </div>`;
+      });
+    }
+
+    document.getElementById('output-block').classList.add('visible');
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('error-block');
+    el.textContent = 'Compilation error: ' + msg;
+    el.classList.add('visible');
+  }
+
+  function addToHistory(goal, data, success) {
+    sessionHistory.unshift({ goal, data, success, time: new Date().toLocaleTimeString() });
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const el = document.getElementById('query-history');
+    if (!sessionHistory.length) {
+      el.innerHTML = '<div class="sidebar-empty">Your compiled goals will appear here</div>';
+      return;
+    }
+    el.innerHTML = sessionHistory.map((h, i) => `
+      <div class="history-item ${i === 0 ? 'active' : ''}" onclick="restoreHistory(${i})">
+        <div class="hi-goal">${h.goal}</div>
+        <div class="hi-meta">
+          <div class="hi-time">${h.time}</div>
+          <div class="hi-badge ${h.success ? 'ok' : 'err'}">${h.success ? 'OK' : 'ERR'}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function restoreHistory(i) {
+    const h = sessionHistory[i];
+    goalInput.value = h.goal;
+    goalInput.dispatchEvent(new Event('input'));
+    if (h.success && h.data) {
+      document.getElementById('output-idle').style.display = 'none';
+      document.getElementById('error-block').classList.remove('visible');
+      showOutput(h.data, '—');
+    } else if (!h.success) {
+      showError(h.data?.detail || 'Previous error');
+    }
+    document.querySelectorAll('.history-item').forEach((el, j) => {
+      el.classList.toggle('active', j === i);
+    });
+  }
+</script>
+</body>
+</html>

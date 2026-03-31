@@ -1,0 +1,388 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BizBrain</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #080c10;
+    --surface: #0e1419;
+    --surface2: #141b22;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.14);
+    --accent: #00d4ff;
+    --accent2: #7c6fff;
+    --accent3: #00ff9d;
+    --text: #e8edf2;
+    --text-muted: #556070;
+    --text-dim: #8899aa;
+    --font-head: 'Syne', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  html, body { height: 100%; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,255,0.025) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .orb-1 { width: 600px; height: 600px; background: rgba(0,212,255,0.06); top: -200px; left: -200px; }
+  .orb-2 { width: 500px; height: 500px; background: rgba(124,111,255,0.06); bottom: -100px; right: -100px; }
+
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 48px;
+    background: rgba(8,12,16,0.8);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-family: var(--font-head);
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--text);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .nav-logo-dot {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 12px var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.8); }
+  }
+
+  main {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 120px 48px 80px;
+  }
+
+  .hero {
+    text-align: center;
+    max-width: 760px;
+    margin-bottom: 72px;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 28px;
+  }
+
+  .hero-tag::before, .hero-tag::after {
+    content: '';
+    display: block;
+    width: 24px;
+    height: 1px;
+    background: var(--accent);
+    opacity: 0.5;
+  }
+
+  h1 {
+    font-family: var(--font-head);
+    font-size: clamp(52px, 7vw, 84px);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -3px;
+    color: var(--text);
+    margin-bottom: 24px;
+  }
+
+  h1 span {
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(255,255,255,0.2);
+  }
+
+  .hero-sub {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text-dim);
+    font-weight: 300;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    width: 100%;
+    max-width: 960px;
+    animation: fadeUp 0.8s 0.2s ease both;
+  }
+
+  .card {
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px 28px;
+    text-decoration: none;
+    color: var(--text);
+    transition: border-color 0.2s, transform 0.2s, background 0.2s;
+    overflow: hidden;
+    cursor: pointer;
+    display: block;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 16px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .card-sot::before { background: radial-gradient(circle at 0% 0%, rgba(0,212,255,0.08) 0%, transparent 60%); }
+  .card-compiler::before { background: radial-gradient(circle at 0% 0%, rgba(124,111,255,0.08) 0%, transparent 60%); }
+  .card-dag::before { background: radial-gradient(circle at 0% 0%, rgba(0,255,157,0.08) 0%, transparent 60%); }
+
+  .card:hover { border-color: var(--border-hover); transform: translateY(-3px); }
+  .card:hover::before { opacity: 1; }
+
+  .card-icon {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    font-size: 20px;
+  }
+
+  .card-sot .card-icon { background: rgba(0,212,255,0.1); border: 1px solid rgba(0,212,255,0.2); }
+  .card-compiler .card-icon { background: rgba(124,111,255,0.1); border: 1px solid rgba(124,111,255,0.2); }
+  .card-dag .card-icon { background: rgba(0,255,157,0.1); border: 1px solid rgba(0,255,157,0.2); }
+
+  .card-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .card-sot .card-label { color: var(--accent); }
+  .card-compiler .card-label { color: var(--accent2); }
+  .card-dag .card-label { color: var(--accent3); }
+
+  .card-title {
+    font-family: var(--font-head);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 10px;
+    line-height: 1.2;
+  }
+
+  .card-desc {
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--text-dim);
+    font-weight: 300;
+    margin-bottom: 24px;
+  }
+
+  .card-arrow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    transition: color 0.2s, gap 0.2s;
+  }
+
+  .card:hover .card-arrow { gap: 10px; }
+  .card-sot:hover .card-arrow { color: var(--accent); }
+  .card-compiler:hover .card-arrow { color: var(--accent2); }
+  .card-dag:hover .card-arrow { color: var(--accent3); }
+
+  .card-arrow svg { width: 14px; height: 14px; }
+
+  .status-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 48px;
+    background: rgba(8,12,16,0.9);
+    border-top: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+  }
+
+  .status-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+  }
+
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent3);
+    box-shadow: 0 0 6px var(--accent3);
+  }
+
+  @media (max-width: 768px) {
+    nav { padding: 16px 24px; }
+    main { padding: 100px 24px 60px; }
+    .cards { grid-template-columns: 1fr; }
+    .status-bar { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<nav>
+  <a href="/" class="nav-logo">
+    <div class="nav-logo-dot"></div>
+    BizBrain
+  </a>
+</nav>
+
+<main>
+  <div class="hero">
+    <div class="hero-tag">Semantic Automation Platform</div>
+    <h1>Biz<span>Brain</span></h1>
+    <p class="hero-sub">Upload invoices, query financial data, and visualise your knowledge graph — all in one unified platform.</p>
+  </div>
+
+  <div class="cards">
+    <a href="sot_dashboard.html" class="card card-sot">
+      <div class="card-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:#00d4ff">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/>
+        </svg>
+      </div>
+      <div class="card-label">Document Engine</div>
+      <div class="card-title">SOT Dashboard</div>
+      <div class="card-desc">Upload PDF invoices and documents. The SOT engine extracts vendor, tax, amount, and document type automatically.</div>
+      <div class="card-arrow">
+        Open
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12,5 19,12 12,19"/></svg>
+      </div>
+    </a>
+
+    <a href="compiler.html" class="card card-compiler">
+      <div class="card-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:#7c6fff">
+          <polyline points="16,18 22,12 16,6"/><polyline points="8,6 2,12 8,18"/>
+        </svg>
+      </div>
+      <div class="card-label">GPL Compiler</div>
+      <div class="card-title">Compiler UI</div>
+      <div class="card-desc">Ask natural language questions about your financial data. The GPL compiler translates goals into precise Aterm computations.</div>
+      <div class="card-arrow">
+        Open
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12,5 19,12 12,19"/></svg>
+      </div>:
+    </a>
+
+    <a href="dag_viewer.html" class="card card-dag">
+      <div class="card-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:#00ff9d">
+          <circle cx="12" cy="5" r="2"/><circle cx="19" cy="19" r="2"/><circle cx="5" cy="19" r="2"/><line x1="12" y1="7" x2="5" y2="17"/><line x1="12" y1="7" x2="19" y2="17"/>
+        </svg>
+      </div>
+      <div class="card-label">Knowledge Graph</div>
+      <div class="card-title">DAG Viewer</div>
+      <div class="card-desc">Visualise your semantic knowledge graph. Explore atoms, fields, aterms, goals, operators and their connections interactively.</div>
+      <div class="card-arrow">
+        Open
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12,5 19,12 12,19"/></svg>
+      </div>
+    </a>
+  </div>
+</main>
+
+<div class="status-bar">
+  <div class="status-item">
+    <div class="status-dot"></div>
+    API running on :8000
+  </div>
+</div>
+
+<script>
+  fetch('/api/health').then(r => r.json()).then(d => {
+    const el = document.getElementById('db-status');
+    if(d.status === 'ok') {
+      el.querySelector('.status-dot').style.background = '#00ff9d';
+    }
+  }).catch(() => {
+    const el = document.getElementById('db-status');
+    el.querySelector('.status-dot').style.background = '#ff4444';
+    el.querySelector('.status-dot').style.boxShadow = '0 0 6px #ff4444';
+    el.childNodes[1].textContent = ' API unreachable';
+  });
+</script>
+</body>
+</html>
