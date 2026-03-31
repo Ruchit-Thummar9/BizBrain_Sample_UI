@@ -5,7 +5,7 @@ This project runs a FastAPI with a simple UI.
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 project/
