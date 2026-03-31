@@ -1,28 +1,27 @@
 
-# FastAPI Server + UI (BizBrain Style)
+# FastAPI Server + UI 
 
 This project runs a FastAPI with a simple UI.
 
 ---
 
-## Project Structure
+## 📁 Project Structure
 
+```
 project/
 │
-├── setup.py                # Creates virtual environment + installs dependencies
-├── requirements.txt       # Python dependencies
+├── setup.py                 # Sets up project (creates venv + installs dependencies)
+├── requirements.txt         # List of Python dependencies
 │
-├── start.bat              # Windows launcher
-├── start.sh               # Linux launcher
-├── start.command          # macOS launcher
+├── start_Win.bat                 # Run project on Windows
+├── start_Linux.sh                # Run project on Linux
+├── start_Mac.command             # Run project on macOS
 │
-├── .venv/                 # Virtual environment (auto-created)
-│
-├── server/
+├── server/                 
 │   ├── __init__.py
-│   └── main.py            # FastAPI application entry point
+│   └── main.py             # FastAPI entry point
 │
-├── routers/
+├── routers/                # API route modules
 │   ├── __init__.py
 │   ├── compiler_router.py
 │   ├── dag_router.py
@@ -30,12 +29,16 @@ project/
 │   ├── spreadsheet_router.py
 │   └── sot_router.py
 │
-├── static/
+├── static/                 # Frontend (UI pages)
 │   ├── index.html
 │   ├── compiler.html
 │   ├── dag_viewer.html
 │   └── sot_dashboard.html
----
+│
+└── .venv/                  # Virtual environment (auto-created)
+```
+
+
 
 ## Setup (First Time Only)
 
@@ -56,7 +59,7 @@ python setup.py
 Double click:
 
 ```bash
-start_W.bat
+start_Win.bat
 ```
 
 ---
@@ -65,7 +68,7 @@ start_W.bat
 
 ```bash
 chmod +x start.sh
-./start_L.sh
+./start_Linux.sh
 ```
 
 ---
@@ -79,7 +82,7 @@ chmod +x start.command
 Then double click:
 
 ```bash
-start_M.command
+start_Mac.command
 ```
 
 ---
@@ -89,7 +92,7 @@ start_M.command
 After starting the server, open:
 
 ```
-http://127.0.0.1:8000
+http://127.0.0.1:8080
 ```
 
 ---
@@ -119,7 +122,7 @@ python setup.py
 
 1. Run setup → `python setup.py`
 2. Start server → `double click start_W.py file`
-3. Open browser → `http://127.0.0.1:8000`
+3. Open browser → `http://127.0.0.1:8080`
 
 
 Done.
